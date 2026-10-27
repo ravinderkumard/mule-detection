@@ -1,0 +1,15 @@
+[project]
+name = "muledetect"
+version = "0.1.0"
+description = "Mule account detection using transaction graphs (IBM AMLworld, Elliptic)"
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,5 @@
+# Optional: graph neural network stack (install AFTER requirements.txt, when you reach the GNN stage).
+# CPU install shown. For GPU, pick the matching CUDA wheel from https://pytorch.org/get-started/locally/
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.3
+torch-geometric>=2.5

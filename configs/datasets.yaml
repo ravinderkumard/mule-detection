@@ -1,0 +1,15 @@
+ibm_aml:
+  kaggle_slug: ealtman2019/ibm-transactions-for-anti-money-laundering-aml
+  variant: HI-Small
+  files: [HI-Small_Trans.csv, HI-Small_Patterns.txt]
+  task: edge (transaction) classification -> aggregate to account-level mule score
+  label: is_laundering
+  expected: {transactions: 5078345, accounts: 515088, laundering_rate: 0.00102}
+
+elliptic:
+  kaggle_slug: ellipticco/elliptic-data-set
+  files: [elliptic_txs_features.csv, elliptic_txs_classes.csv, elliptic_txs_edgelist.csv]
+  task: node classification
+  label_map: {"1": illicit, "2": licit, "unknown": unlabeled}
+  expected: {nodes: 203769, edges: 234355, time_steps: 49, illicit: 4545}
+  split: temporal (train steps 1-34, test 35-49, per Weber et al. 2019)

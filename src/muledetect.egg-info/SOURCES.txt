@@ -1,0 +1,8 @@
+README.md
+pyproject.toml
+src/muledetect/__init__.py
+src/muledetect/paths.py
+src/muledetect.egg-info/PKG-INFO
+src/muledetect.egg-info/SOURCES.txt
+src/muledetect.egg-info/dependency_links.txt
+src/muledetect.egg-info/top_level.txt

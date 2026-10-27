@@ -1,0 +1,30 @@
+# Data (never commit raw datasets — Kaggle licence + size)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+
+# Secrets
+kaggle.json
+.env
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.ruff_cache/
+.pytest_cache/
+
+# Artifacts
+models/
+mlruns/
+*.pkl
+*.joblib
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
