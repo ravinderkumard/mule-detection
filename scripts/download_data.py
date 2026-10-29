@@ -1,9 +1,12 @@
 """Download IBM AMLworld (HI-Small) and Elliptic from Kaggle into data/raw/.
 
 Prereqs:
-  1. Kaggle account + API token (Kaggle -> Settings -> API -> "Create New Token").
-  2. Token saved as ~/.kaggle/kaggle.json  (Windows: C:\\Users\\<you>\\.kaggle\\kaggle.json)
-     or exported as KAGGLE_USERNAME / KAGGLE_KEY env vars.
+  1. Kaggle account + API token (Kaggle -> Settings -> API -> "Generate New Token").
+  2. Provide the token via any of (kaggle >= 2.x):
+       - KAGGLE_API_TOKEN in .env (or exported in the shell)
+       - ~/.kaggle/access_token
+       - `kaggle auth login` (OAuth)
+     Legacy KAGGLE_USERNAME / KAGGLE_KEY or ~/.kaggle/kaggle.json also still work.
   3. Accept the dataset terms once on each Kaggle page if prompted (403 otherwise).
 
 Usage:
@@ -18,7 +21,10 @@ import sys
 import zipfile
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env")  # must run before kaggle reads its credentials
 RAW = ROOT / "data" / "raw"
 
 AML_SLUG = "ealtman2019/ibm-transactions-for-anti-money-laundering-aml"
@@ -40,11 +46,11 @@ def get_api():
     api = KaggleApi()
     try:
         api.authenticate()
-    except Exception as e:  # noqa: BLE001
+    except (Exception, SystemExit) as e:  # noqa: BLE001 - kaggle calls exit(1) on auth failure
         sys.exit(
             f"Kaggle auth failed: {e}\n"
-            "Put kaggle.json in ~/.kaggle/ (chmod 600 on Linux/Mac) "
-            "or set KAGGLE_USERNAME and KAGGLE_KEY."
+            "Set KAGGLE_API_TOKEN in .env, save it to ~/.kaggle/access_token, "
+            "or run `kaggle auth login`."
         )
     return api
 
