@@ -16,6 +16,7 @@ mule-detection/
 │   ├── raw/                  # Kaggle downloads (git-ignored)
 │   ├── interim/              # parquet caches from verify_data.py
 │   └── processed/            # model-ready features
+├── docs/                     # write-ups per day (see Docs below)
 ├── notebooks/                # EDA + experiments
 ├── reports/                  # figures, metrics
 ├── scripts/
@@ -89,6 +90,9 @@ Expect roughly 1.2 GB of disk for raw files plus parquet caches.
 - **Elliptic labels:** `1` = illicit, `2` = licit, `unknown` ≈ 77% of nodes. Features file has no header:
   column 0 = txId, column 1 = time step, then 165 anonymised features (94 local + 72 aggregated in the paper's description).
 - Use a **temporal split** on Elliptic (train 1–34, test 35–49); random splits leak and inflate scores.
+
+## Docs
+- [Day 5 — temporal split, USD rates, account features and labels](docs/day5_features.md) (includes interview notes)
 
 ## References
 - Altman et al., *Realistic Synthetic Financial Transactions for Anti-Money Laundering Models*, NeurIPS 2023 Datasets & Benchmarks.
