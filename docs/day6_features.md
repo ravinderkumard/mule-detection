@@ -1,5 +1,18 @@
 # Day 6 — Behaviour features (velocity, pass-through, mix, fan)
 
+## Summary
+Day 6 adds 26 behaviour features to the Day-5 account tables (45 features in total), built per window
+from that window's transactions only: velocity (how long, how often and how bursty an account is active),
+pass-through (whether and how fast incoming money is forwarded), payment mix (outgoing format shares,
+cross-currency, round amounts, self-transfers) and fan shape (counterparty diversity). The whole build
+runs in about 20 seconds on the full HI-Small data, with no infinite values and `NaN` kept for undefined
+values. The strongest stable signals are velocity (`burst_ratio`, `active_span_hours`, AUC ≈ 0.66–0.70 on
+both train and test) and outgoing ACH share (≈ 0.70); the pass-through and fan features carry real but
+unstable signal (some flip direction between train and test), and round amounts carry none on this
+synthetic data. The main caveats are that "Reinvestment" self-transfers exist only in the train window
+(so those features are train artefacts), that counts and amounts are extremely heavy-tailed, and that
+much of the velocity signal is a proxy for transaction volume.
+
 Code: `src/muledetect/behaviour.py` → `behaviour_features(tx, core, formats=None)`, one row per account,
 aligned to `core.index`. `build_account_table(txns, behaviour=True)` / `build_split_tables(df, behaviour=True)`
 in `features.py` join it between core features and labels; `behaviour=False` gives exactly the Day-5 table.
