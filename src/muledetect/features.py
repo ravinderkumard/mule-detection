@@ -12,6 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from muledetect.behaviour import align_columns, behaviour_features
 from muledetect.paths import INTERIM
 
 TRANS_PATH = INTERIM / "hi_small_trans.parquet"
@@ -170,16 +171,29 @@ def build_core_features(txns: pd.DataFrame) -> pd.DataFrame:
     return feat[CORE_FEATURES]
 
 
-def build_account_table(txns: pd.DataFrame) -> pd.DataFrame:
-    """Core features joined with labels for one window of transactions."""
-    return build_core_features(txns).join(build_labels(txns))
+def build_account_table(txns: pd.DataFrame, behaviour: bool = True, formats: list[str] | None = None) -> pd.DataFrame:
+    """Core features (+ Day-6 behaviour features if ``behaviour``) joined with labels for one window.
+
+    ``formats``: payment formats for the ``fmt_out_*`` columns (see ``behaviour_features``).
+    With ``behaviour=False`` the output is exactly the Day-5 table.
+    """
+    core = build_core_features(txns)
+    parts = [core]
+    if behaviour:
+        parts.append(behaviour_features(txns, core, formats))
+    return pd.concat(parts, axis=1).join(build_labels(txns))
 
 
-def build_split_tables(df: pd.DataFrame, train_frac: float = 0.6, val_frac: float = 0.2) -> dict[str, pd.DataFrame]:
+def build_split_tables(df: pd.DataFrame, train_frac: float = 0.6, val_frac: float = 0.2,
+                       behaviour: bool = True) -> dict[str, pd.DataFrame]:
     """Temporal split, then one account table per split (features + labels from that split only).
 
-    USD rates are estimated on the train window and applied to every split.
+    USD rates are estimated on the train window and applied to every split. With ``behaviour``,
+    the payment-format list comes from train and all tables are aligned to train's columns.
     """
     splits = temporal_split(df, train_frac, val_frac)
     rates = estimate_usd_rates(splits["train"])
-    return {name: build_account_table(add_usd_amounts(part, rates)) for name, part in splits.items()}
+    formats = sorted(splits["train"]["payment_format"].unique())
+    tables = {name: build_account_table(add_usd_amounts(part, rates), behaviour, formats)
+              for name, part in splits.items()}
+    return align_columns(tables) if behaviour else tables

@@ -93,6 +93,7 @@ Expect roughly 1.2 GB of disk for raw files plus parquet caches.
 
 ## Docs
 - [Day 5 — temporal split, USD rates, account features and labels](docs/day5_features.md) (includes interview notes)
+- [Day 6 — velocity, pass-through and mix features](docs/day6_features.md)
 
 ## References
 - Altman et al., *Realistic Synthetic Financial Transactions for Anti-Money Laundering Models*, NeurIPS 2023 Datasets & Benchmarks.
