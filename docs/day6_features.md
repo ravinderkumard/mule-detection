@@ -18,9 +18,10 @@ aligned to `core.index`. `build_account_table(txns, behaviour=True)` / `build_sp
 in `features.py` join it between core features and labels; `behaviour=False` gives exactly the Day-5 table.
 Everything is computed per window only (no cross-window leakage).
 
-Run: `python scripts/build_features.py` (~20 s on full HI-Small), `python scripts/check_features.py`
-(sanity report, exit 1 on infinities), `pytest tests`.
-Output: 45 features + `is_mule`, `mule_role` = 47 columns; val and test have exactly train's columns in
+Run: `python scripts/build_features.py` (~20 s on full HI-Small; validates input and output, see
+*Data contracts*), `python scripts/check_features.py` (schema check on the saved files + sanity report,
+exit 1 on infinities), `pytest tests` (23 tests).
+Output: 45 features + `is_mule`, `mule_role` = 47 columns (plus `account`, stored as a column in the parquet files); val and test have exactly train's columns in
 train's order (`align_columns`; a payment format missing from a window becomes 0).
 
 ## Conventions
@@ -58,6 +59,30 @@ Self-transfers are excluded from hold times.
 ## 4. Fan shape (from core)
 `fan_out_diversity` = cp_out / txns_out, `fan_in_diversity` = cp_in / txns_in (NaN if no such txns),
 `fan_in_out_ratio` = (cp_in + 1) / (cp_out + 1).
+
+## Data contracts (pandera)
+Principle: bad data fails loudly at the boundary, not silently inside the model.
+Code: `src/muledetect/schemas.py` (`pandera>=0.20`, added to `requirements.txt`).
+
+| Schema | Checks |
+|---|---|
+| `TRANSACTION_SCHEMA` | required columns and types; non-null `timestamp`, `src`, `dst` (non-empty); `from_bank`/`to_bank` ≥ 0; amounts ≥ 0 and finite; `payment_format` in the 7 known formats; `is_laundering` in {0, 1} |
+| `FEATURE_SCHEMA` | `account` unique and non-null; core counts/amounts ≥ 0, finite; velocity/pass-through/fan features ≥ 0; shares (`*_share`, `in_out_amount_ratio`, diversities, every `fmt_out_*`) in [0, 1]; `txns` ≥ 1 and `txns == txns_in + txns_out`; `is_mule` in {0, 1}; `mule_role` in the 4 known roles |
+
+- **No infinities anywhere.** NaN is allowed only in the five columns where "undefined" is meaningful:
+  `gap_min_hours`, `gap_median_hours`, `hold_median_hours`, `fan_out_diversity`, `fan_in_diversity`.
+- `fmt_out_*` is matched by regex and optional, because the set of formats can differ per window.
+- `validate_transactions(df)` / `validate_features(df)` validate lazily (all failures collected) and raise
+  `DataContractError` listing each failing column, check and an example value. `validate_features` expects
+  `account` as a column, not the index.
+- **Where they run:** `build_features.py` validates the input transactions, then each feature table *before*
+  writing its parquet (a failure stops the pipeline with nothing written); `check_features.py` validates the
+  saved files.
+- **Tests:** `tests/test_schemas.py` (15 tests) feeds deliberately bad data (negative amount, unknown format,
+  inf, duplicate account, share > 1, bad label, NaN in a non-nullable column, missing column) and expects
+  `DataContractError`; valid hand-made tables must pass. `tests/test_features.py` (8 tests) covers the
+  features on small hand-made examples.
+- Real data: train / val / test (512,713 / 236,106 / 356,396 accounts) and the HI-Small transaction table all pass.
 
 ## Findings (single-feature ROC-AUC, train / test; NaN scored as lowest)
 - **Velocity is the strongest family and stable:** `burst_ratio` 0.70 / 0.66, `active_span_hours` 0.70 / 0.69,

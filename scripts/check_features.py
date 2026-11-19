@@ -12,12 +12,17 @@ import numpy as np
 import pandas as pd
 
 from muledetect.paths import PROCESSED
+from muledetect.schemas import validate_features
 
 SPLITS = ("train", "val", "test")
 
 
 def main() -> int:
-    tabs = {s: pd.read_parquet(PROCESSED / f"features_{s}.parquet").set_index("account") for s in SPLITS}
+    tabs = {}
+    for s in SPLITS:
+        raw = pd.read_parquet(PROCESSED / f"features_{s}.parquet")
+        validate_features(raw, f"features_{s}")  # raises DataContractError on violation
+        tabs[s] = raw.set_index("account")
     feats = [c for c in tabs["train"].columns if c not in ("is_mule", "mule_role")]
     n_inf_total = 0
 
