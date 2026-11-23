@@ -28,3 +28,5 @@ mlruns/
 Thumbs.db
 .vscode/
 .idea/
+mlflow.db
+mlartifacts/

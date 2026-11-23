@@ -1,0 +1,85 @@
+# Single source of truth for the HI-Small mule pipeline. Paths are relative to the repo root.
+# Every value here is logged to MLflow with each run (see src/muledetect/pipeline.py).
+seed: 42
+
+paths:
+  raw_csv: data/raw/ibm_aml/HI-Small_Trans.csv
+  interim: data/interim/hi_small_trans.parquet        # ingest -> validate/features
+  validation_report: reports/validation.json          # validate
+  features_dir: data/processed                        # features -> features_{train,val,test}.parquet
+  model: models/lgbm.joblib                           # train -> evaluate
+  metrics: reports/metrics.json                       # evaluate
+
+split:                      # temporal, by row-count quantile of timestamp
+  train_frac: 0.6
+  val_frac: 0.2             # test = the remainder
+
+features:
+  behaviour: true           # Day-6 behaviour features on top of the core ones
+  # Columns the model sees. Left out on purpose: fmt_out_reinvestment and self_transfers
+  # only occur in the train window (train artefacts, see docs/day6_features.md).
+  model_columns:
+    - txns_out
+    - txns_in
+    - txns
+    - amount_out
+    - amount_in
+    - cp_out
+    - cp_in
+    - counterparties
+    - banks_out
+    - banks_in
+    - banks
+    - avg_amount_out
+    - avg_amount_in
+    - max_amount_out
+    - max_amount_in
+    - in_out_ratio
+    - amount_ratio
+    - active_hours
+    - txns_per_hour
+    - active_span_hours
+    - n_active_days
+    - n_active_hours
+    - txns_per_active_day
+    - txns_per_active_hour
+    - max_txns_in_hour
+    - burst_ratio
+    - gap_min_hours
+    - gap_median_hours
+    - in_out_amount_ratio
+    - out_after_in_share
+    - hold_median_hours
+    - out_within_24h_share
+    - fmt_out_ach
+    - fmt_out_bitcoin
+    - fmt_out_cash
+    - fmt_out_cheque
+    - fmt_out_credit_card
+    - fmt_out_wire
+    - cross_ccy_share
+    - round_amount_share
+    - fan_out_diversity
+    - fan_in_diversity
+    - fan_in_out_ratio
+  target: is_mule
+
+model:                      # LightGBM (sklearn API); seed is injected as random_state
+  params:
+    n_estimators: 500
+    learning_rate: 0.05
+    num_leaves: 31
+    min_child_samples: 50
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    scale_pos_weight: 10
+    n_jobs: 4
+  early_stopping_rounds: 50 # monitored on the val split (average precision)
+
+evaluate:
+  top_k_fracs: [0.01, 0.05] # recall / precision when flagging the top-k share of accounts
+
+mlflow:
+  db: mlflow.db             # SQLite backend store in the repo root
+  experiment: mule-detection

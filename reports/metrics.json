@@ -1,0 +1,17 @@
+{
+  "best_iteration": 1,
+  "val_pr_auc": 0.11772021486665693,
+  "val_roc_auc": 0.6464156440934415,
+  "val_base_rate": 0.006492846433381617,
+  "val_recall_top0.01": 0.26157860404435745,
+  "val_precision_top0.01": 0.16984328674290555,
+  "val_recall_top0.05": 0.36203522504892366,
+  "val_precision_top0.05": 0.04701397712833545,
+  "test_pr_auc": 0.1654901844768981,
+  "test_roc_auc": 0.7656501805429502,
+  "test_base_rate": 0.00617571465448546,
+  "test_recall_top0.01": 0.3230349840981372,
+  "test_precision_top0.01": 0.1994949494949495,
+  "test_recall_top0.05": 0.4825079509313948,
+  "test_precision_top0.05": 0.0595959595959596
+}
