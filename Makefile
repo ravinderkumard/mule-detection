@@ -15,4 +15,5 @@ test:     ; $(PY) -m pytest tests
 # Removes derived data/models only (raw CSV and MLflow history are kept).
 clean:
 	rm -f data/interim/hi_small_trans.parquet data/processed/features_*.parquet \
-	      models/lgbm.joblib reports/validation.json reports/metrics.json
+	      models/lgbm.joblib models/calibrator.joblib reports/validation.json \
+	      reports/metrics.json reports/evaluation.md reports/pr_curve.png reports/pr_curve_test.csv

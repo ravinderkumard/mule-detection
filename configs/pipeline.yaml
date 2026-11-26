@@ -8,7 +8,11 @@ paths:
   validation_report: reports/validation.json          # validate
   features_dir: data/processed                        # features -> features_{train,val,test}.parquet
   model: models/lgbm.joblib                           # train -> evaluate
+  calibrator: models/calibrator.joblib                # train -> evaluate (Platt, fit on val)
   metrics: reports/metrics.json                       # evaluate
+  report: reports/evaluation.md                       # evaluate
+  pr_curve: reports/pr_curve.png                      # evaluate
+  pr_curve_csv: reports/pr_curve_test.csv             # evaluate
 
 split:                      # temporal, by row-count quantile of timestamp
   train_frac: 0.6
@@ -65,20 +69,32 @@ features:
   target: is_mule
 
 model:                      # LightGBM (sklearn API); seed is injected as random_state
+  # Chosen on validation PR-AUC only. scale_pos_weight >= 5 collapsed to 1-13 trees on this temporal
+  # split (train mules do not look like later mules); 2 keeps weighting without that collapse.
   params:
-    n_estimators: 500
-    learning_rate: 0.05
-    num_leaves: 31
-    min_child_samples: 50
+    n_estimators: 2000
+    learning_rate: 0.03
+    num_leaves: 7
+    min_child_samples: 500
     subsample: 0.8
     subsample_freq: 1
     colsample_bytree: 0.8
-    scale_pos_weight: 10
+    scale_pos_weight: 2
     n_jobs: 4
-  early_stopping_rounds: 50 # monitored on the val split (average precision)
+  early_stopping_rounds: 100 # monitored on the val split (average precision)
 
 evaluate:
-  top_k_fracs: [0.01, 0.05] # recall / precision when flagging the top-k share of accounts
+  alert_budgets: [100, 500, 1000]   # accounts an investigation team can review per period
+
+# Hand-written baseline standing in for the bank's rules engine. Each rule = ANDed `column >= value`.
+# Thresholds were set from the train/val windows only. Accounts are ranked by #rules fired, then amount_out.
+rules:
+  tiebreak: amount_out
+  definitions:
+    high_passthrough_24h:   {out_within_24h_share: 0.5, txns_out: 3}
+    many_counterparties:    {counterparties: 10}
+    balanced_in_out:        {in_out_amount_ratio: 0.8, txns_in: 2, txns_out: 2}
+    rapid_burst:            {max_txns_in_hour: 5}
 
 mlflow:
   db: mlflow.db             # SQLite backend store in the repo root
